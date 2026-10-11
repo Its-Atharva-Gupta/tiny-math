@@ -1,0 +1,14 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+loaded dtype: torch.float32
+vocab matrices frozen=12.88M  training=1.19M
+step 1: loss=2.4590 nan_grads=0 gn=41.12 nan_weights=0
+step 2: loss=4.9772 nan_grads=0 gn=93.04 nan_weights=0
+step 3: loss=6.5757 nan_grads=0 gn=126.32 nan_weights=0
+step 4: loss=3.8581 nan_grads=0 gn=54.88 nan_weights=0
+step 5: loss=3.0221 nan_grads=0 gn=24.82 nan_weights=0
+step 6: loss=3.0088 nan_grads=0 gn=39.86 nan_weights=0
+step 7: loss=2.9115 nan_grads=0 gn=49.60 nan_weights=0
+step 8: loss=2.7139 nan_grads=0 gn=24.94 nan_weights=0
+step 9: loss=2.4267 nan_grads=0 gn=13.04 nan_weights=0
+step 10: loss=2.2947 nan_grads=0 gn=9.80 nan_weights=0
+VERDICT: CLEAN — recipe valid for Kaggle round 5

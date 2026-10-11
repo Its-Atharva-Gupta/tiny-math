@@ -1,0 +1,6 @@
+param dtypes: {torch.float16}
+variant results:
+  A AdamW wd=.1 foreach=default: loss=2.4225 -> NaN tensors: 51 FIRST=gpt_neox.embed_in.weight
+  B AdamW wd=.1 foreach=False: loss=2.4225 -> NaN tensors: 51 FIRST=gpt_neox.embed_in.weight
+  C AdamW wd=0  foreach=False: loss=2.4225 -> NaN tensors: 51 FIRST=gpt_neox.embed_in.weight
+  D SGD lr=1e-3: loss=2.4225 -> NaN tensors: 0  (clean)

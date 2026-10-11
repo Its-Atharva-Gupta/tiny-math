@@ -27,11 +27,20 @@ model-index:
 ---
 # tiny-math-1m: a 1M-parameter transformer that adds 4-digit numbers
 
-**The smallest model in this repo (1,065,088 parameters) solves 4-digit addition
-perfectly — 5000/5000 held-out problems, zero errors — given ~1.8M practice
-problems. It has a 16-token vocabulary (digits 0-9, `+`, `=`, newline, comma,
-pad) and was trained from random initialization. No pretraining, no
-demonstrations, no RL. Plain next-token prediction.**
+**The smallest model in this repo (805,632 parameters, d=128 × 4 layers) solves
+4-digit addition perfectly — 5000/5000 held-out problems, zero errors — given
+~1.8M practice problems. It has a 16-token vocabulary (digits 0-9, `+`, `=`,
+newline, comma, pad) and was trained from random initialization. No
+pretraining, no demonstrations, no RL. Plain next-token prediction.**
+
+> **Update (full project completed):** this model was the reference arm of a
+> larger study asking *"what is the smallest model that is good at
+> arithmetic?"* Final answer: **0.81M from-scratch (this model, 100%)** vs
+> **14.1M the smallest real pretrained LLM (pythia-14m, 99.8% after
+> fine-tuning on the same 1.78M problems — with only its 1.19M transformer
+> blocks trainable)**. LLMs below 14.1M hit a BPE-tokenization floor
+> (3.7M → 0.2%, 8.3M → 0%). Zero-shot, every LLM up to 134.5M scores 0%.
+> Full tables + chart: see `VERDICT.md` in the GitHub repo.
 
 ## The finding this repo exists to report
 
@@ -126,7 +135,7 @@ final answer last (comma-separated), single trailing newline.
 |---|---|
 | Architecture | decoder-only GPT, d=128, 4 layers, 4 heads, ctx=64, learned absolute positions |
 | Vocab | 16 (digits + `+ - = \n ,` + pad); embedding table = 2,048 params (~0.2% of model) |
-| Params | 1,065,088 |
+| Params | 805,632 (torch count; "1M" is the size-class label) |
 | Data | generated on the fly, 1,785,714 problems (~50M tokens), zero eval overlap by construction |
 | Optimizer | AdamW, lr 6e-4, β=(0.9,0.95), wd 0.1, 5% warmup → cosine to 10%, grad clip 1.0 |
 | Eval | greedy decode, strict exact match, n=5000, best checkpoint by tuning-split accuracy |

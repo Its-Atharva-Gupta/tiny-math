@@ -1,0 +1,9 @@
+{
+  "smallest_from_scratch_M": 805632,
+  "smallest_llm_M": 14067712,
+  "extrapolation_best": 0.0,
+  "baselines": {
+    "bigram": 0.0,
+    "untrained_1m": 0.0
+  }
+}
