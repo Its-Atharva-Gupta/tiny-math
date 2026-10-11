@@ -199,6 +199,25 @@ then invents more problems; lenient=0 because last number is hallucination).
   headline — escalating it cannot change the "smallest" answer, skipped
   (quota discipline, reason recorded).
 
+## TOKENIZER ABLATION (user request, RUNNING — kernel tiny-math-tokablation)
+One-variable experiment: TinyStories-1M, native BPE scored strict 0.002 @
+1.78M problems (control r2_ts1m_1780k). Treatment = SMALLEST tokenizer
+change: number runs split PER DIGIT (pre-tok `?\\p{N}+` -> `?\\d`), same
+50,257 vocab, SAME embedding matrix, no new tokens, no resize. Everything
+else frozen: same checkpoint, same 1.78M problems, same fp16/lr 6e-5/
+batch-32 recipe, same eval sets (tune 7781 / final 7782).
+- Local validation done: OLD chops `1842 -> ['18','42']`, `9920 -> ['99','20']`
+  (inconsistent boundaries — the mechanism we suspected); NEW gives one
+  token per digit; 500-string round-trip check passed; alphabet closed,
+  no spaces (chunk-interaction assumption holds).
+- Compute: digit-split = 1.23x tokens/problem (36.9 -> 45.4), disclosed as
+  a consequence of the treatment (same problems, ~1.23x steps).
+- PRE-REGISTERED PREDICTIONS: BPE-chunking was THE wall -> big jump
+  (>>10%, plausibly 90%+; from-scratch 806K hit 100% on same data);
+  tokenization was not it -> <5% (wall = pretraining/capacity).
+- Implementation: per-char id dict == patched-pretokenizer for this corpus
+  (single-char chunk = BPE identity), asserted in-kernel at startup.
+
 ## Timeline
 - 23:0x Phase 0 done: train.py + baselines.py + unit tests all pass. Local
   2-digit 2M-token run proved learning (loss 2.08→1.34, acc 0→~2% on l2r;

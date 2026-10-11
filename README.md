@@ -5,13 +5,16 @@
 | | smallest that passes (≥95% on 4-digit addition) | accuracy |
 |---|---|---|
 | **From-scratch** (digit vocab) | **805,632 params** | **100.0%** (5000/5000) |
-| **Real pretrained LLM** (fine-tuned) | **pythia-14m, 14.1M params** | **99.8%** (n=2000) |
+| **Real pretrained LLM** (fine-tuned, minimal tokenizer fix) | **TinyStories-1M, 3.75M params** | **99.7%** (n=2000) |
+| Real pretrained LLM (native BPE, no tokenizer change) | pythia-14m, 14.1M params | 99.8% (n=2000) |
 
-Zero-shot, every real LLM up to 134.5M params scores **0%**. Fine-tuned,
-LLMs below ~14M hit a BPE-tokenization floor (3.7M → 0.2% even with the
-same 1.78M-problem budget that gave the 0.81M from-scratch model 100%).
-The full story — three-panel chart, failure-mode gallery, NaN forensics,
-honest disclosures: **[VERDICT.md](VERDICT.md)**.
+**The closing experiment: a one-rule tokenizer ablation moved TinyStories-1M
+from 0.2% → 99.7%** — same weights, same data, same recipe; only change:
+number runs tokenize per digit instead of inconsistent chunks
+(`1842 → ['18','42']` native vs `['1','8','4','2']` fixed), same 50,257
+vocab, no new tokens. The BPE floor was never about capacity — it was the
+tokenizer's chop points. Zero-shot, every real LLM up to 134.5M still
+scores **0%**. Full story: **[VERDICT.md](VERDICT.md)**.
 
 Three structural findings: (1) capacity buys sample efficiency and the
 transition is a **cliff** (0.81M: 0.2% → 100% between 357k and 1.78M

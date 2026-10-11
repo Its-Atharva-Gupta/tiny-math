@@ -3,17 +3,39 @@
 **The question:** find the smallest model that is genuinely good at
 4-digit addition (exact-match on held-out problems, greedy decoding).
 
-**The answer — two numbers, one task:**
+**The answer — two numbers, one task (refined by the tokenizer ablation):**
 
 | | smallest that passes (≥95%) | accuracy | training data |
 |---|---|---|---|
 | **From-scratch model** (digit vocab) | **805,632 params** | **100.0%** (5000/5000) | 1.78M problems |
-| **Real pretrained LLM** (fine-tuned) | **pythia-14m, 14.1M params** | **99.8%** (n=2000) | 1.78M problems |
+| **Real pretrained LLM** (fine-tuned, minimal tokenizer fix) | **TinyStories-1M, 3.75M params** | **99.7%** (n=2000) | 1.78M problems |
+| Real pretrained LLM (fine-tuned, NATIVE BPE tokenizer) | pythia-14m, 14.1M params | 99.8% (n=2000) | 1.78M problems |
 
-And the floor is brutal in between: **zero-shot, every real LLM up to
-134.5M params scores 0%**; fine-tuned, LLMs below ~14M hit a
-BPE-tokenization wall (3.7M → 0.2%, 8.3M → 0%) even with enough data that
-an 0.81M from-scratch model reaches 100%.
+**The tokenizer ablation (the study's closing experiment) — one variable,
+500× swing.** TinyStories-1M, same checkpoint, same 1.78M problems, same
+fp16/lr/batch recipe, same eval sets; the ONLY change was splitting number
+runs per digit in the pre-tokenizer (same 50,257-entry vocab, same
+embedding matrix, no new tokens):
+
+| tokenizer | strict accuracy |
+|---|---|
+| native BPE (`1842 → ['18','42']`, `9920 → ['99','20']` — inconsistent boundaries) | **0.2%** |
+| digit-split (`1842 → ['1','8','4','2']`, one rule: `\p{N}+` → `\d`) | **99.7%** |
+
+The BPE floor is not a capacity floor and not a pretraining floor — it is
+*literally the tokenizer chopping numbers at inconsistent boundaries*.
+Fix the boundaries, and the smallest real LLM in the study solves
+arithmetic at 3.75M params. (Cost: 1.23× tokens per problem, 36.9 → 45.5.)
+pythia-14m's native-BPE success at 14.1M is now explained as The Pile's
+math/code exposure grinding through the inconsistency at larger scale —
+the tokenizer fix makes it unnecessary.
+
+And the floor is brutal in between (all runs with **native BPE** tokenizers):
+**zero-shot, every real LLM up to 134.5M params scores 0%**; fine-tuned,
+LLMs below ~14M hit a BPE-tokenization wall (3.7M → 0.2%, 8.3M → 0%) even
+with enough data that an 0.81M from-scratch model reaches 100% — *unless
+the tokenizer is fixed, which collapses the floor entirely* (ablation
+above: 3.7M → 99.7% with one pre-tokenizer rule).
 
 ![verdict chart](verdict_chart.png)
 
