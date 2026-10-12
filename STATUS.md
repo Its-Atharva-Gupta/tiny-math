@@ -218,6 +218,48 @@ batch-32 recipe, same eval sets (tune 7781 / final 7782).
 - Implementation: per-char id dict == patched-pretokenizer for this corpus
   (single-char chunk = BPE identity), asserted in-kernel at startup.
 
+## TOKENIZER ABLATION RESULT (complete, 42min) — THE CLOSING EXPERIMENT
+**TinyStories-1M: 0.2% (native BPE) -> 99.7% (digit-split), SAME everything
+else.** Same checkpoint/weights, same 1.78M problems, same fp16/lr 6e-5/
+batch-32 recipe, same eval sets. Only change: pre-tokenizer number runs
+split per digit (same 50,257 vocab, same embedding matrix, no new tokens).
+- 500x swing from one rule — confirms the pre-registered "BPE was the
+  wall" prediction at maximum strength.
+- tok/problem 45.5 (1.23x as predicted locally); best strict 0.997 @ step
+  9895, final 0.991; same hallucinate-after-answer pattern (lenient=0);
+  story language destroyed again by full fine-tuning.
+- VERDICT AMENDED: smallest real LLM good at arithmetic = TinyStories-1M
+  3.75M with the tokenizer fix (was: pythia-14m 14.1M native BPE).
+  pythia's native-BPE success reinterpreted: The Pile math/code exposure
+  grinding through inconsistent boundaries at larger scale.
+- Scratch-vs-LLM gap narrows 17x -> 4.6x (0.81M vs 3.75M).
+- Published: HF + GitHub (commit adda2fa). STATUS/VERDICT/README updated.
+- Quota total for entire project: ~7.9h of 30h weekly GPU.
+
+## TALK+MATH (user wants ONE model that talks AND does arithmetic)
+### Round 1 (kernel tiny-math-talkmath, v1 pad-id crash @45min, v2 torchao crash @111min)
+- v1 bug: pad id read from generation_config (None pre-gen) -> torch.full crash
+  at first eval. Fixed: PAD_ID from tokenizer + step-50 fail-fast eval.
+- v2 bug: THE torchao gotcha from our own skill (Kaggle ships 0.10, peft
+  dispatcher needs >0.16) — I forgot the documented uninstall. Fixed:
+  pip uninstall torchao BEFORE peft import.
+- RUN A (rehearsal 1:1 chunk mix, full FT): math strict 1.4%, story PPL
+  12.35->11.05 (x0.90, language PERFECT "there was a little girl named
+  Lily..."). Naive mixing: pretrained task wins the gradient war at 3.75M.
+- RUN B (LoRA r=8, lr 1e-4, math-only): math 0.0%, PPL 12.35->9.3 MILLION
+  (x756k), language WRECKED. 74K trainable ~10x too weak for math; adapter
+  perturbation (alpha/r=2 on all linears) still hijacked outputs.
+  => "frozen base preserves language" was WRONG in practice: base+adapter
+  != base behavior.
+### Round 2 (RUNNING, watcher armed) — both lessons applied
+- A2: rehearsal 3:1 math:story (75% math updates). Predict math 50-95%,
+  ppl ~1-3x base.
+- B2: LoRA r=32 (~4x capacity) alpha=32, lr 3e-5 (3x gentler). Predict
+  math 20-90%, ppl between base and wrecked.
+- NEW DIAGNOSTIC both runs: ctx_prefix_strict — math eval with story-prefix
+  prompt ("Once upon a time there was a boy who had 47+68=") — tests
+  whether skill exists but is context-gated.
+
 ## Timeline
 - 23:0x Phase 0 done: train.py + baselines.py + unit tests all pass. Local
   2-digit 2M-token run proved learning (loss 2.08→1.34, acc 0→~2% on l2r;
